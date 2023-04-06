@@ -1,7 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
+import io from 'socket.io-client';
+
+const socket = io('http://localhost:5000');
 
 function App() {
+  const [players, setPlayers] = useState([]);
+  const [symbol, setSymbol] = useState(null);
+  const [turn, setTurn] = useState(null);
   const [board, setBoard] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [winner, setWinner] = useState(null);
@@ -18,6 +24,7 @@ function App() {
     checkForWinner(newBoard);
 
     setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
+    socket.emit('player-move', { board: newBoard, turn: turn === 'X' ? 'O' : 'X' });
   }
 
   function checkForWinner(board) {
@@ -65,7 +72,41 @@ function App() {
     setWinner(null);
   };
 
-  console.log(renderStatus());
+  useEffect(() => {
+    socket.on('connect', () => {
+      console.log('connected to server');
+      socket.emit('player-join');
+    });
+    socket.on('disconnect', () => {
+      console.log('disconnected from server');
+    });
+    socket.on('player-joined', (player) => {
+      console.log('player joined', player);
+      setPlayers([...players, player]);
+      if (player.id === socket.id) {
+        setSymbol(player.symbol);
+      }
+    });
+    socket.on('player-join', (player) => {
+      console.log('player join', player);
+      setPlayers([...players, player]);
+    });
+    socket.on('player-left', (id) => {
+      console.log('player left', id);
+      setPlayers(players.filter((player) => player.id !== id));
+    });
+    socket.on('player-move', (data) => {
+      console.log('player move', data);
+      setBoard(data.board);
+      setTurn(data.turn);
+      setWinner(checkForWinner(data.board));
+    });
+    socket.on('game-end', (data) => {
+      console.log('game end', data);
+      setWinner(data.winner);
+    });
+  }, [players]);
+
 
   return (
     <div className="board">
