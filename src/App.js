@@ -45,10 +45,9 @@ function App() {
       if (board[a] !== null && board[a] === board[b] && board[b] === board[c]) {
         setWinner(board[a]);
         return;
-      }else{
-        setWinner(null);
       }
     }
+    return false;
   }
 
   function renderBox(index) {
@@ -106,12 +105,12 @@ function App() {
       setBoard(data.board);
       setTurn(data.turn);
       setCurrentPlayer(data.turn);
-      setWinner(checkForWinner(data.board));
+      setWinner(checkForWinner(data.board) ? checkForWinner(data.board) : null);
     });
-    // socket.on('game-end', (data) => {
-    //   console.log('game end', data);
-    //   setWinner(data.winner);
-    // });
+    socket.on('game-end', (data) => {
+      console.log('game end', data);
+      setWinner(data.winner);
+    });
   }, [players]);
 
 
