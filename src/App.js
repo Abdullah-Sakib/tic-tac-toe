@@ -14,6 +14,7 @@ function App() {
 
   function handleBoxClick(index) {
     if (board[index] !== null || winner !== null) {
+      console.log(`boad move ${board[index]}  winner status ${winner !== null}`)
       return;
     }
 
@@ -24,7 +25,7 @@ function App() {
     checkForWinner(newBoard);
 
     setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-    socket.emit('player-move', { board: newBoard, turn: turn === 'X' ? 'O' : 'X' });
+    socket.emit('player-move', { board: newBoard, turn: currentPlayer === "X" ? "O" : "X" });
   }
 
   function checkForWinner(board) {
@@ -94,11 +95,15 @@ function App() {
     socket.on('player-left', (id) => {
       console.log('player left', id);
       setPlayers(players.filter((player) => player.id !== id));
+      // setCurrentPlayer(players.filter((player) => player.id !== id));
     });
     socket.on('player-move', (data) => {
       console.log('player move', data);
+      console.log('player move', data.turn);
+
       setBoard(data.board);
       setTurn(data.turn);
+      setCurrentPlayer(data.turn);
       setWinner(checkForWinner(data.board));
     });
     socket.on('game-end', (data) => {
