@@ -1,19 +1,27 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import io from 'socket.io-client';
+import io from "socket.io-client";
 
-const socket = io('http://localhost:5000', { transports: ["websocket"] });
+const socket = io("http://localhost:5000", { transports: ["websocket"] });
 
 function App() {
   const [players, setPlayers] = useState([]);
   const [symbol, setSymbol] = useState(null);
-  const [turn, setTurn] = useState([]);
+  const [details, setDetails] = useState([]);
   const [board, setBoard] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [winner, setWinner] = useState(null);
+  const [user, setUser] = useState(null);
+
+  // user enter
+  const handleUserEnter = (e) => {
+    e.preventDefault();
+    const username = e.target?.name?.value;
+    setUser(username);
+  };
 
   function handleBoxClick(index) {
-    if (board[index] !== null || winner !== null ) {
+    if (board[index] !== null || winner !== null || details[details.length - 1]?.playerName === user ) {
       console.log(`boad move ${board[index]}  winner status ${winner !== null}`)
       return;
     }
@@ -23,9 +31,17 @@ function App() {
     setBoard(newBoard);
 
     checkForWinner(newBoard);
+    setDetails([...details, {
+      playerName: user,
+      move: currentPlayer,
+    }])
 
     setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-    socket.emit('player-move', { board: newBoard, turn: currentPlayer === "X" ? "O" : "X" , winner});
+    socket.emit("player-move", {
+      board: newBoard,
+      turn: currentPlayer === "X" ? "O" : "X",
+      details: details,
+    });
   }
 
   function checkForWinner(board) {
@@ -43,7 +59,7 @@ function App() {
     for (let i = 0; i < winningCombos.length; i++) {
       const [a, b, c] = winningCombos[i];
       if (board[a] !== null && board[a] === board[b] && board[b] === board[c]) {
-        console.log("winner found")
+        console.log("winner found");
         setWinner(board[a]);
         return;
       }
@@ -76,72 +92,84 @@ function App() {
   };
 
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log('connected to server');
-      socket.emit('player-join');
+    socket.on("connect", () => {
+      console.log("connected to server");
+      socket.emit("player-join");
     });
-    socket.on('disconnect', () => {
-      console.log('disconnected from server');
+    socket.on("disconnect", () => {
+      console.log("disconnected from server");
     });
-    socket.on('player-joined', (player) => {
-      console.log('player joined', player);
+    socket.on("player-joined", (player) => {
+      console.log("player joined", player);
       setPlayers([...players, player]);
       if (player.id === socket.id) {
         setSymbol(player.symbol);
       }
     });
-    socket.on('player-join', (player) => {
-      console.log('player join', player);
+    socket.on("player-join", (player) => {
+      console.log("player join", player);
       setPlayers([...players, player]);
     });
-    socket.on('player-left', (id) => {
-      console.log('player left', id);
+    socket.on("player-left", (id) => {
+      console.log("player left", id);
       setPlayers(players.filter((player) => player.id !== id));
       // setCurrentPlayer(players.filter((player) => player.id !== id));
     });
-    socket.on('player-move', (data) => {
-      console.log('player move', data);
-      console.log('player move', data.turn);
+    socket.on("player-move", (data) => {
+      console.log("player move", data);
+      console.log("player move", data.turn);
 
       setBoard(data.board);
-      setTurn(data.turn);
+      setDetails(data.details);
       setCurrentPlayer(data.turn);
       checkForWinner(data.board);
     });
-    socket.on('game-end', (data) => {
-      console.log('game end', data);
+    socket.on("game-end", (data) => {
+      console.log("game end", data);
       setWinner(data.winner);
     });
   }, [players, winner]);
 
-
   return (
-    <div className="board">
-      <h1>Tic Tac Toe</h1>
-      <div className="row">
-        {renderBox(0)}
-        {renderBox(1)}
-        {renderBox(2)}
-      </div>
-      <div className="row">
-        {renderBox(3)}
-        {renderBox(4)}
-        {renderBox(5)}
-      </div>
-      <div className="row">
-        {renderBox(6)}
-        {renderBox(7)}
-        {renderBox(8)}
-      </div>
-      <div className="status">{renderStatus()}</div>
-      {(renderStatus() === "O wins!" ||
-        renderStatus() === "It's a tie!" ||
-        renderStatus() === "X wins!") && (
-        <button className="reset" onClick={() => resetGame()}>
-          Restart Game
-        </button>
+    <>
+      {!user ? (
+        <div className="input_area_wrapper">
+          <form onSubmit={handleUserEnter} className="input_area">
+            <input className="input" type="text" name="name" id="" />
+            <button type="submit" className="enter_btn">
+              Enter
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="board">
+          <h1>Tic Tac Toe</h1>
+          <div className="row">
+            {renderBox(0)}
+            {renderBox(1)}
+            {renderBox(2)}
+          </div>
+          <div className="row">
+            {renderBox(3)}
+            {renderBox(4)}
+            {renderBox(5)}
+          </div>
+          <div className="row">
+            {renderBox(6)}
+            {renderBox(7)}
+            {renderBox(8)}
+          </div>
+          <div className="status">{renderStatus()}</div>
+          {(renderStatus() === "O wins!" ||
+            renderStatus() === "It's a tie!" ||
+            renderStatus() === "X wins!") && (
+            <button className="reset" onClick={() => resetGame()}>
+              Restart Game
+            </button>
+          )}
+        </div>
       )}
-    </div>
+    </>
   );
 }
 
