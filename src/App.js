@@ -25,7 +25,7 @@ function App() {
     checkForWinner(newBoard);
 
     setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-    socket.emit('player-move', { board: newBoard, turn: currentPlayer === "X" ? "O" : "X" });
+    socket.emit('player-move', { board: newBoard, turn: currentPlayer === "X" ? "O" : "X" , winner});
   }
 
   function checkForWinner(board) {
@@ -43,6 +43,7 @@ function App() {
     for (let i = 0; i < winningCombos.length; i++) {
       const [a, b, c] = winningCombos[i];
       if (board[a] !== null && board[a] === board[b] && board[b] === board[c]) {
+        console.log("winner found")
         setWinner(board[a]);
         return;
       }
@@ -105,13 +106,13 @@ function App() {
       setBoard(data.board);
       setTurn(data.turn);
       setCurrentPlayer(data.turn);
-      setWinner(checkForWinner(data.board) ? checkForWinner(data.board) : null);
+      checkForWinner(data.board);
     });
     socket.on('game-end', (data) => {
       console.log('game end', data);
       setWinner(data.winner);
     });
-  }, [players]);
+  }, [players, winner]);
 
 
   return (
