@@ -45,6 +45,8 @@ function App() {
       if (board[a] !== null && board[a] === board[b] && board[b] === board[c]) {
         setWinner(board[a]);
         return;
+      }else{
+        setWinner(null);
       }
     }
   }
@@ -106,10 +108,10 @@ function App() {
       setCurrentPlayer(data.turn);
       setWinner(checkForWinner(data.board));
     });
-    socket.on('game-end', (data) => {
-      console.log('game end', data);
-      setWinner(data.winner);
-    });
+    // socket.on('game-end', (data) => {
+    //   console.log('game end', data);
+    //   setWinner(data.winner);
+    // });
   }, [players]);
 
 
