@@ -7,13 +7,13 @@ const socket = io('http://localhost:5000', { transports: ["websocket"] });
 function App() {
   const [players, setPlayers] = useState([]);
   const [symbol, setSymbol] = useState(null);
-  const [turn, setTurn] = useState(null);
+  const [turn, setTurn] = useState([]);
   const [board, setBoard] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [winner, setWinner] = useState(null);
 
   function handleBoxClick(index) {
-    if (board[index] !== null || winner !== null) {
+    if (board[index] !== null || winner !== null ) {
       console.log(`boad move ${board[index]}  winner status ${winner !== null}`)
       return;
     }
