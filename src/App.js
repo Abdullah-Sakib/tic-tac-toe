@@ -13,16 +13,15 @@ function App() {
   const [winner, setWinner] = useState(null);
   const [user, setUser] = useState(null);
 
-  // user enter
-  const handleUserEnter = (e) => {
-    e.preventDefault();
-    const username = e.target?.name?.value;
-    setUser(username);
-  };
-
   function handleBoxClick(index) {
-    if (board[index] !== null || winner !== null || details[details.length - 1]?.playerName === user ) {
-      console.log(`boad move ${board[index]}  winner status ${winner !== null}`)
+    if (
+      board[index] !== null ||
+      winner !== null ||
+      details[details.length - 1]?.playerName === user
+    ) {
+      console.log(
+        `boad move ${board[index]}  winner status ${winner !== null}`
+      );
       return;
     }
 
@@ -31,10 +30,13 @@ function App() {
     setBoard(newBoard);
 
     checkForWinner(newBoard);
-    setDetails([...details, {
-      playerName: user,
-      move: currentPlayer,
-    }])
+    setDetails([
+      ...details,
+      {
+        playerName: user,
+        move: currentPlayer,
+      },
+    ]);
 
     setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
     socket.emit("player-move", {
@@ -94,7 +96,7 @@ function App() {
   useEffect(() => {
     socket.on("connect", () => {
       console.log("connected to server");
-      socket.emit("player-join");
+      // socket.emit("player-join", user);
     });
     socket.on("disconnect", () => {
       console.log("disconnected from server");
@@ -129,6 +131,14 @@ function App() {
       setWinner(data.winner);
     });
   }, [players, winner]);
+
+  // user enter
+  const handleUserEnter = (e) => {
+    e.preventDefault();
+    const username = e.target?.name?.value;
+    setUser(username);
+    socket.emit("player-join", username);
+  };
 
   return (
     <>
