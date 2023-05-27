@@ -43,7 +43,14 @@ function App() {
     socket.emit("player-move", {
       board: newBoard,
       turn: currentPlayer === "X" ? "O" : "X",
-      details: details,
+      details: [
+        ...details,
+        {
+          playerName: user,
+          move: currentPlayer,
+        },
+      ],
+      roomId
     });
   }
 
@@ -102,38 +109,38 @@ function App() {
     socket.on("players", (allPlayers) => {
       console.log(allPlayers);
     });
-    // socket.on("disconnect", () => {
-    //   console.log("disconnected from server");
-    // });
-    // socket.on("player-joined", (player) => {
-    //   console.log("player joined", player);
-    //   setPlayers([...players, player]);
-    //   if (player.id === socket.id) {
-    //     setSymbol(player.symbol);
-    //   }
-    // });
-    // socket.on("player-join", (player) => {
-    //   console.log("player join", player);
-    //   setPlayers([...players, player]);
-    // });
-    // socket.on("player-left", (id) => {
-    //   console.log("player left", id);
-    //   setPlayers(players.filter((player) => player.id !== id));
-    //   // setCurrentPlayer(players.filter((player) => player.id !== id));
-    // });
-    // socket.on("player-move", (data) => {
-    //   console.log("player move", data);
-    //   console.log("player move", data.turn);
+    socket.on("disconnect", () => {
+      console.log("disconnected from server");
+    });
+    /* socket.on("player-joined", (player) => {
+      console.log("player joined", player);
+      setPlayers([...players, player]);
+      if (player.id === socket.id) {
+        setSymbol(player.symbol);
+      }
+    }); */
+    /* socket.on("player-join", (player) => {
+      console.log("player join", player);
+      setPlayers([...players, player]);
+    }); */
+    socket.on("player-left", (id) => {
+      console.log("player left", id);
+      setPlayers(players.filter((player) => player.id !== id));
+      // setCurrentPlayer(players.filter((player) => player.id !== id));
+    });
+    socket.on("player-move-frontend", (data) => {
+      console.log("player move", data);
+      console.log("player move", data.turn);
 
-    //   setBoard(data.board);
-    //   setDetails(data.details);
-    //   setCurrentPlayer(data.turn);
-    //   checkForWinner(data.board);
-    // });
-    // socket.on("game-end", (data) => {
-    //   console.log("game end", data);
-    //   setWinner(data.winner);
-    // });
+      setBoard(data.board);
+      setDetails(data.details);
+      setCurrentPlayer(data.turn);
+      checkForWinner(data.board);
+    });
+    socket.on("game-end", (data) => {
+      console.log("game end", data);
+      setWinner(data.winner);
+    });
   }, [players, winner]);
 
   // user enter
@@ -141,7 +148,7 @@ function App() {
     e.preventDefault();
     setUser(e.target?.name?.value);
     setRoomId(e.target?.roomId?.value);
-    // socket.emit("player-join", username);
+    e.target?.roomId?.value && socket.emit("player-join", {user: e.target?.name?.value, roomId: e.target?.roomId?.value});
   };
 
   return (
@@ -152,14 +159,15 @@ function App() {
             <input
               className="input"
               type="text"
-              name="name"
+              name="roomId"
               id=""
               placeholder="Put your room id"
             />
             <input
               className="input"
               type="text"
-              name="roomId"
+              
+              name="name"
               id=""
               placeholder="Put your name"
             />
