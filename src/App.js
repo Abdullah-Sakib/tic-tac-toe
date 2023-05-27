@@ -12,6 +12,7 @@ function App() {
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [winner, setWinner] = useState(null);
   const [user, setUser] = useState(null);
+  const [roomId, setRoomId] = useState(null);
 
   function handleBoxClick(index) {
     if (
@@ -98,46 +99,49 @@ function App() {
       console.log("connected to server");
       // socket.emit("player-join", user);
     });
-    socket.on("disconnect", () => {
-      console.log("disconnected from server");
+    socket.on("players", (allPlayers) => {
+      console.log(allPlayers);
     });
-    socket.on("player-joined", (player) => {
-      console.log("player joined", player);
-      setPlayers([...players, player]);
-      if (player.id === socket.id) {
-        setSymbol(player.symbol);
-      }
-    });
-    socket.on("player-join", (player) => {
-      console.log("player join", player);
-      setPlayers([...players, player]);
-    });
-    socket.on("player-left", (id) => {
-      console.log("player left", id);
-      setPlayers(players.filter((player) => player.id !== id));
-      // setCurrentPlayer(players.filter((player) => player.id !== id));
-    });
-    socket.on("player-move", (data) => {
-      console.log("player move", data);
-      console.log("player move", data.turn);
+    // socket.on("disconnect", () => {
+    //   console.log("disconnected from server");
+    // });
+    // socket.on("player-joined", (player) => {
+    //   console.log("player joined", player);
+    //   setPlayers([...players, player]);
+    //   if (player.id === socket.id) {
+    //     setSymbol(player.symbol);
+    //   }
+    // });
+    // socket.on("player-join", (player) => {
+    //   console.log("player join", player);
+    //   setPlayers([...players, player]);
+    // });
+    // socket.on("player-left", (id) => {
+    //   console.log("player left", id);
+    //   setPlayers(players.filter((player) => player.id !== id));
+    //   // setCurrentPlayer(players.filter((player) => player.id !== id));
+    // });
+    // socket.on("player-move", (data) => {
+    //   console.log("player move", data);
+    //   console.log("player move", data.turn);
 
-      setBoard(data.board);
-      setDetails(data.details);
-      setCurrentPlayer(data.turn);
-      checkForWinner(data.board);
-    });
-    socket.on("game-end", (data) => {
-      console.log("game end", data);
-      setWinner(data.winner);
-    });
+    //   setBoard(data.board);
+    //   setDetails(data.details);
+    //   setCurrentPlayer(data.turn);
+    //   checkForWinner(data.board);
+    // });
+    // socket.on("game-end", (data) => {
+    //   console.log("game end", data);
+    //   setWinner(data.winner);
+    // });
   }, [players, winner]);
 
   // user enter
   const handleUserEnter = (e) => {
     e.preventDefault();
-    const username = e.target?.name?.value;
-    setUser(username);
-    socket.emit("player-join", username);
+    setUser(e.target?.name?.value);
+    setRoomId(e.target?.roomId?.value);
+    // socket.emit("player-join", username);
   };
 
   return (
@@ -145,7 +149,20 @@ function App() {
       {!user ? (
         <div className="input_area_wrapper">
           <form onSubmit={handleUserEnter} className="input_area">
-            <input className="input" type="text" name="name" id="" />
+            <input
+              className="input"
+              type="text"
+              name="name"
+              id=""
+              placeholder="Put your room id"
+            />
+            <input
+              className="input"
+              type="text"
+              name="roomId"
+              id=""
+              placeholder="Put your name"
+            />
             <button type="submit" className="enter_btn">
               Enter
             </button>
